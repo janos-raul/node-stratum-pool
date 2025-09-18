@@ -1,6 +1,6 @@
 {
     "name": "stratum-pool",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "High performance stratum pool server with solo mining and ASICBoost support",
     "keywords": [
         "stratum",
@@ -35,9 +35,7 @@
         "async": "^2.6.1",
         "base58-native": "^0.1.4",
         "bignum": "^0.13.0",
-        "bitgo-utxo-lib": "git+https://github.com/miketout/bitgo-utxo-lib.git",
-        "equihashverify": "git+https://github.com/s-nomp/equihashverify.git",
-        "verushash": "git+https://github.com/VerusCoin/verushash-node#e6572f345b8c24e4a1212f6c9eb66c1c400d83e1",
+        "bitcoinjs-lib": "^5.2.0",
         "merkle-bitcoin": "^1.0.2",
         "promise": "^8.0.1"
     },
