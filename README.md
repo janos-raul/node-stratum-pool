@@ -57,12 +57,6 @@ This server was built to be more efficient and easier to setup, maintain and sca
 ### Hashing Algorithms Supported
 * ✓ **SHA256** (Bitcoin, Bitcoin Cash, etc.)
 * ✓ **SHA256 with AsicBoost**
-* ✓ Equihash 200,9
-* ✓ Equihash 144,5
-* ✓ Equihash 192,7
-* ✓ Scrypt
-* ✓ X11
-* ✓ And more...
 
 ## Requirements
 * node v8.11+
@@ -73,7 +67,7 @@ This server was built to be more efficient and easier to setup, maintain and sca
 ### Install as a node module by cloning repository
 
 ```bash
-git clone https://github.com/janos-raul/stratum-pool.git node_modules/stratum-pool
+git clone -b sha256-nomp-node-stratum-pool https://github.com/janos-raul/stratum-pool.git node_modules/stratum-pool
 npm update
 ```
 
