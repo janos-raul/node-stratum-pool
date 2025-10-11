@@ -53,6 +53,7 @@ This server was built to be more efficient and easier to setup, maintain and sca
 * ✓ **Version Rolling (BIP320)** - Efficient nonce space distribution
 * ✓ **Solo Mining Mode** - Direct mining without pool shares
 * ✓ **Proper PROP Implementation** - Fair proportional reward distribution
+* ✓ **Advanced Security Module** - Comprehensive DDoS protection and rate limiting
 
 ### Hashing Algorithms Supported
 * ✓ **SHA256** (Bitcoin, Bitcoin Cash, etc.)
@@ -130,115 +131,132 @@ var Stratum = require('stratum-pool');
 var pool = Stratum.createPool({
 
 {
-  "enabled": true,
-  "coin": "bitcoin.json",
-  "asicboost": true,
-  "blockIdentifier":"",
+    // Basic settings
+    "enabled": true,                      // Enable this pool
+    "coin": "bitcoin.json",              // Reference to coin config file
+    "asicboost": true,                   // Enable ASICBoost for this pool
+    "blockIdentifier": "",               // Optional block identifier
+  
+	  // ============================================================================
+	  // SECURITY MODULE - Advanced DDoS Protection & Rate Limiting
+	  // ============================================================================
 
-  "address": "",
+	  "security": {
+		"enabled": true,                    // Master switch for security features
+
+		// Rate Limiting Configuration
+		// Tracks and limits connection attempts, malformed messages, and floods per IP
+		"rateLimit": {
+		  "enabled": true,                  // Enable rate limiting
+		  "window": 60000,                  // Time window in ms (60000 = 1 minute)
+		  "maxConnections": 10,             // Max connections per IP per window
+		  "maxMalformed": 3,                // Max malformed messages before ban
+		  "maxFloods": 2                    // Max socket flood detections before ban
+		},
+
+		// Auto-Ban System Configuration
+		// Progressive ban system with escalating durations based on strikes
+		"ban": {
+		  "enabled": true,                  // Enable automatic IP banning
+		  "duration": 600000,               // Initial ban duration in ms (600000 = 10 minutes)
+		  "maxStrikes": 3,                  // Number of strikes before permanent ban
+		  "permanentDuration": 86400000     // Permanent ban duration in ms (86400000 = 24 hours)
+		}
+	  },
+
+    // Pool wallet and fee addresses
+    "address": "YOUR_POOL_WALLET_ADDRESS",    // Main pool payout address
 
     "rewardRecipients": {
-        "": 2.0
-        "22851477d63a085dbc2398c8430af1c09e7343f6": 0.1
+        // IMPORTANT: This is a COINBASE-LEVEL split, deducted BEFORE poolFee/soloFee!
+        // If you set this > 0, it reduces the block reward available for fee calculation
+        // Example: 6.25 BTC block with 1.0% here = 0.0625 BTC to fee address at coinbase
+        //          Remaining 6.1875 BTC is then split by poolFee/soloFee percentages
+        // RECOMMENDED: Set to 0.0 and use poolFee/soloFee instead for simpler accounting
+        "YOUR_FEE_ADDRESS": 0.0          // Coinbase reward split (0.0 = disabled, recommended)
     },
 
-  "paymentProcessing": {
-	"minConf": 101,
-    "enabled": true,
-	"soloMining": true, 
-    "paymentMode": "prop", 	
-    "poolFee": 2.0,
-    "soloFee": 2.0,  
-    "_comment_paymentMode": "prop, pplnt",
-    "paymentInterval": 3600,
-    "minimumPayment": 0.01,
-	"minimumPayment_solo": 0.01,
-    "maxBlocksPerPayment": 5,
-      "daemon": {
+    // Payment processing configuration
+    "paymentProcessing": {
+        "txfee": 0.0004,                 // Transaction fee for payouts
+        "minConf": 101,                  // Confirmations before payment (must match coin config)
+        "enabled": true,                 // Enable automatic payments
+        "soloMining": true,              // Enable solo mining mode
+        "paymentMode": "prop",           // Payment mode: "prop" or "pplnt"
+        "poolFee": 2.0,                  // Pool mining fee (2.0 = 2%) - applied AFTER rewardRecipients
+        "soloFee": 2.0,                  // Solo mining fee (2.0 = 2%) - applied AFTER rewardRecipients
+        "paymentInterval": 3600,         // Payment interval in seconds (3600 = 1 hour)
+        "minimumPayment": 0.01,          // Minimum payout for pool miners
+        "minimumPayment_solo": 0.01,     // Minimum payout for solo miners
+        "maxBlocksPerPayment": 5,        // Maximum blocks to process per payment run
+
+        // Payment daemon connection
+        "daemon": {
             "host": "127.0.0.1",
             "port": 8332,
-            "user": "bitcoinrpc",
-            "password": "password"
+            "user": "rpcuser",
+            "password": "rpcpassword"
         }
     },
 
+    // TLS/SSL configuration (optional)
     "tlsOptions": {
         "enabled": false,
         "serverKey": "",
         "serverCert": "",
         "ca": ""
     },
-	
-  "ports": {
-    "50212": {
-      "diff": 25000,
-	  "tls": false,
-	  "soloMining": true,
-      "varDiff": {
-        "minDiff": 5000,
-        "maxDiff": 5000000000000000,
-        "targetTime": 15,
-        "retargetTime": 60,
-        "variancePercent": 30
-	   }
-      },
-	  "50213": {
-      "diff": 50000,
-	  "tls": false,
-	  "soloMining": true,
-      "varDiff": {
-        "minDiff": 25000,
-        "maxDiff": 5000000000000000,
-        "targetTime": 15,
-        "retargetTime": 60,
-        "variancePercent": 30
-      }
-    },
-   	  "50214": {
-      "diff": 100000,
-	  "tls": false,
-	  "soloMining": true,
-      "varDiff": {
-        "minDiff": 50000,
-        "maxDiff": 5000000000000000,
-        "targetTime": 15,
-        "retargetTime": 60,
-        "variancePercent": 30
-      }
-    },
-   	  "50216": {
-      "diff": 500000,
-	  "tls": false,
-	  "soloMining": true,
-      "varDiff": {
-        "minDiff": 100000,
-        "maxDiff": 5000000000000000,
-        "targetTime": 15,
-        "retargetTime": 60,
-        "variancePercent": 30
-      }
-    } 	
-  },
-  
-    "poolId": "main",
-    "_comment_poolId": "use it for region identification: eu, us, asia or keep default if you have one stratum instance for one coin",
 
+    // Mining ports configuration
+    "ports": {
+        "50212": {                       // Port number
+            "diff": 25000,               // Starting difficulty
+            "tls": false,                // Enable TLS for this port
+            "soloMining": true,          // Allow solo mining on this port
+            "varDiff": {                 // Variable difficulty settings
+                "minDiff": 10000,        // Minimum difficulty
+                "maxDiff": 500000,       // Maximum difficulty
+                "targetTime": 15,        // Target time between shares (seconds)
+                "retargetTime": 90,      // How often to adjust difficulty (seconds)
+                "variancePercent": 30    // Allowed variance percentage
+            }
+        },
+        "50213": {                       // Higher difficulty port for larger miners
+            "diff": 50000,
+            "tls": false,
+            "soloMining": true,
+            "varDiff": {
+                "minDiff": 50000,
+                "maxDiff": 5000000,
+                "targetTime": 25,
+                "retargetTime": 180,
+                "variancePercent": 35
+            }
+        }
+    },
+
+    // Pool identifier for multi-region setups
+    "poolId": "main",
+
+    // Daemon instances for block submission and monitoring
     "daemons": [
         {
             "host": "127.0.0.1",
             "port": 8332,
-            "user": "bitcoinrpc",
-            "password": "password"
+            "user": "rpcuser",
+            "password": "rpcpassword"
         }
-  ],
+    ],
 
+    // P2P block notifications (optional, alternative to blocknotify)
     "p2p": {
         "enabled": false,
         "host": "127.0.0.1",
-        "port": 34230,
+        "port": 8333,
         "disableTransactions": true
     },
 
+    // MPOS database integration (optional)
     "mposMode": {
         "enabled": false,
         "host": "127.0.0.1",
@@ -358,6 +376,66 @@ cgminer -o stratum+tcp://localhost:3333 -u walletaddress -p x
 - Version rolling improves efficiency for high-hashrate miners
 - Optimized share validation for SHA256
 - Efficient job distribution for large mining farms
+
+## Security Features
+
+### Advanced Security Module
+
+The stratum pool includes a comprehensive security system designed to protect against various attacks:
+
+#### Features:
+- **Rate Limiting**: Tracks connections, malformed messages, and socket floods per IP
+- **Progressive Ban System**: Escalating ban durations based on strike count
+- **Automatic Cleanup**: Expired bans and old tracking data are automatically purged
+- **Real-time Monitoring**: Events and statistics for all security actions
+- **Memory Efficient**: Designed to handle high-traffic scenarios without memory leaks
+
+#### Protection Against:
+- **Connection Flooding**: Limits rapid connection attempts from single IPs
+- **Malformed Messages**: Detects and bans clients sending invalid stratum messages
+- **Socket Flooding**: Protects against buffer overflow attacks
+- **Share Spam**: Works with existing share-based banning system
+- **Repeated Offenders**: Progressive bans become longer with each strike
+
+#### How the Ban System Works:
+
+1. **First Offense**: 10-minute ban (1x duration)
+2. **Second Offense**: 20-minute ban (2x duration)
+3. **Third Offense**: 24-hour "permanent" ban
+4. **Automatic Expiration**: All bans expire automatically after their duration
+5. **Cleanup**: Old tracking data is purged every 5 minutes to prevent memory bloat
+
+#### Important Notes:
+
+**WSL2 Users**:
+If running your pool in WSL2, be aware that all connections appear to come from the same internal NAT IP (typically `172.x.x.x`). This means:
+- Banning an attacker would ban ALL miners
+- You should set `"enabled": false` for development
+- For production, deploy on native Linux or use HAProxy with PROXY protocol
+
+**TCP Proxy Protocol**:
+If using HAProxy or nginx with PROXY protocol:
+1. Set `"tcpProxyProtocol": true` in your pool config
+2. Configure your load balancer to send PROXY headers
+3. The pool will extract real client IPs from PROXY headers
+
+**Production Deployment**:
+For maximum security in production:
+- Enable the security module with conservative thresholds
+- Monitor security statistics regularly
+- Use external DDoS protection (Cloudflare, AWS Shield, etc.)
+- Deploy on native Linux for accurate IP tracking
+- Consider multiple security layers (firewall + pool security)
+
+#### Implementation Details:
+
+The security module is implemented in `lib/security.js` and integrates with:
+- **Connection Handler**: Checks for bans on new connections
+- **Stratum Protocol**: Validates all incoming messages
+- **Socket Layer**: Monitors buffer sizes and data rates
+- **Pool Manager**: Coordinates bans across multiple coin pools
+
+All security tracking is in-memory for performance, with automatic cleanup every 5 minutes to prevent memory growth.
 
 ## Credits
 
