@@ -51,6 +51,7 @@ This server was built to be more efficient and easier to setup, maintain and sca
 ### Enhanced SHA256 Features (New)
 * ✓ **AsicBoost Support** - Overt AsicBoost with version rolling
 * ✓ **Version Rolling (BIP320)** - Efficient nonce space distribution
+* ✓ **Multi-Version Support** - `mining.multi_version` extension for overt AsicBoost
 * ✓ **Solo Mining Mode** - Direct mining without pool shares
 * ✓ **Proper PROP Implementation** - Fair proportional reward distribution
 * ✓ **Advanced Security Module** - Comprehensive DDoS protection and rate limiting
@@ -356,8 +357,51 @@ This implementation supports the following stratum extensions:
 
 - `mining.subscribe` with version rolling support
 - `mining.configure` for AsicBoost negotiation
+- `mining.multi_version` for overt AsicBoost with multiple versions
 - `mining.suggest_target` for solo miners
 - `mining.submit` with version bits
+
+### mining.multi_version Support
+
+The `mining.multi_version` extension allows miners to request multiple block versions simultaneously, enabling overt AsicBoost mining. This is an alternative to `mining.configure` version rolling.
+
+#### How it works:
+1. Miner sends: `{"method": "mining.multi_version", "params": [4]}`
+2. Pool responds with `result: true` if enabled
+3. Pool sends jobs with multiple versions in `mining.notify`
+4. Miner can use any of the provided versions for share submission
+
+#### Coin Configuration:
+
+```javascript
+{
+  "name": "bitcoin",
+  "symbol": "BTC",
+  "algorithm": "sha256",
+  // ... other config ...
+
+  "multiVersion": {
+    "enabled": true,        // Enable mining.multi_version support
+    "maxVersions": 4,       // Maximum versions a miner can request (1-16)
+    "mode": "sequential"    // Version generation mode: "sequential"
+  }
+}
+```
+
+#### Configuration Options:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | boolean | false | Enable/disable multi_version support |
+| `maxVersions` | number | 4 | Maximum number of versions a miner can request |
+| `mode` | string | "sequential" | How versions are generated ("sequential") |
+
+#### Miner Compatibility:
+
+Miners supporting `mining.multi_version`:
+- Custom firmware with multi_version support
+- Some Bitmain firmware variants
+- Mining proxies with multi_version capability
 
 ## Testing
 
@@ -436,6 +480,23 @@ The security module is implemented in `lib/security.js` and integrates with:
 - **Pool Manager**: Coordinates bans across multiple coin pools
 
 All security tracking is in-memory for performance, with automatic cleanup every 5 minutes to prevent memory growth.
+
+---
+
+<div align="center">
+
+## Maintained By
+
+### **janos-raul**
+#### Developer & Maintainer
+
+[![Website](https://img.shields.io/badge/Pool-sha256--mining.go.ro-blue?style=for-the-badge)](https://sha256-mining.go.ro:50300)
+
+*Building high-performance SHA256 mining infrastructure*
+
+</div>
+
+---
 
 ## Credits
 
