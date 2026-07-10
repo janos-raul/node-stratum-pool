@@ -33,13 +33,13 @@
   },
   "dependencies": {
     "async": "^2.6.1",
-	"bchaddrjs": "^0.5.2",
+    "bchaddrjs": "^0.5.2",
     "bitcoinjs-lib": "^5.2.0",
     "bs58check": "^3.0.1",
     "merkle-bitcoin": "^1.0.2",
     "promise": "^8.0.1"
   },
   "engines": {
-    "node": ">=8.11"
+    "node": ">=18"
   }
 }
