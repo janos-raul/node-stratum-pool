@@ -17,7 +17,7 @@
   "bugs": {
     "url": "https://github.com/janos-raul/node-stratum-pool/issues"
   },
-  "license": "MIT",
+  "license": "GPL-2.0",
   "author": "janos-raul",
   "contributors": [
     "janos-raul",
