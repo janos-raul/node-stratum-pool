@@ -1,4 +1,5 @@
 # High Performance SHA256 Stratum Pool Server
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
 High performance Stratum poolserver with enhanced SHA256 support in Node.js. One instance of this software can startup and manage multiple coin pools, each with their own daemon and stratum port :)
 
