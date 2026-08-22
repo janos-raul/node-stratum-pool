@@ -248,27 +248,7 @@ var pool = Stratum.createPool({
             "user": "rpcuser",
             "password": "rpcpassword"
         }
-    ],
-
-    // P2P block notifications (optional, alternative to blocknotify)
-    "p2p": {
-        "enabled": false,
-        "host": "127.0.0.1",
-        "port": 8333,
-        "disableTransactions": true
-    },
-
-    // MPOS database integration (optional)
-    "mposMode": {
-        "enabled": false,
-        "host": "127.0.0.1",
-        "port": 3306,
-        "user": "",
-        "password": "",
-        "database": "",
-        "checkPassword": true,
-        "autoCreateWorker": false
-    }
+    ]
 }
 ```
 
