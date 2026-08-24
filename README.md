@@ -1,4 +1,5 @@
 # High Performance SHA256 Stratum Pool Server
+
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
 High performance Stratum poolserver with enhanced SHA256 support in Node.js. One instance of this software can startup and manage multiple coin pools, each with their own daemon and stratum port :)
@@ -6,17 +7,20 @@ High performance Stratum poolserver with enhanced SHA256 support in Node.js. One
 ## 🚀 New Features in This Fork
 
 ### AsicBoost Support with Version Rolling
+
 - **Full AsicBoost compatibility** for modern SHA256 ASIC miners
 - **Version rolling** (BIP320) support for improved mining efficiency
 - Automatic detection and negotiation of version rolling mask
 - Compatible with all major ASIC manufacturers (Bitmain, MicroBT, Canaan, etc.)
 
 ### Solo Mining Mode
+
 - Complete solo mining functionality
 - Direct block rewards to miner addresses
 - Real-time solo mining statistics
 
 ### Enhanced PROP Payout Mode
+
 - **Fixed and properly implemented** proportional payout system
 - Accurate share tracking and reward distribution
 - Improved round management
@@ -25,52 +29,58 @@ High performance Stratum poolserver with enhanced SHA256 support in Node.js. One
 ---
 
 ## Notice
+
 This is a module for Node.js that will do nothing on its own. Unless you're a Node.js developer who would like to handle stratum authentication and raw share data then this module will not be of use to you. For a full featured portal that uses this module, see [s-nomp (Some New Open Mining Portal)](https://github.com/s-nomp/s-nomp). It handles payments, website front-end, database layer, mutli-coin/pool support, auto-switching miners between coins/pools, etc.. The portal also has an [MPOS](https://github.com/MPOS/php-mpos) compatibility mode so that the it can function as a drop-in-replacement for [python-stratum-mining](https://github.com/Crypto-Expert/stratum-mining).
 
 [![NPM](https://nodei.co/npm/stratum-pool.png?downloads=true&stars=true)](https://nodei.co/npm/stratum-pool/)
 
 ## Why
+
 This server was built to be more efficient and easier to setup, maintain and scale than existing stratum poolservers which are written in python. Compared to the spaghetti state of the latest [stratum-mining python server](https://github.com/Crypto-Expert/stratum-mining/), this software should also have a lower barrier to entry for other developers to fork and add features or fix bugs.
 
 ## Features
 
 ### Core Features
-* Daemon RPC interface
-* Stratum TCP socket server
-* Block template / job manager
-* P2P to get block notifications as peer node
-* Optimized generation transaction building
-* Connecting to multiple daemons for redundancy
-* Process share submissions
-* Session managing for purging DDoS/flood initiated zombie workers
-* Auto ban IPs that are flooding with invalid shares
-* **POW** (proof-of-work) & **POS** (proof-of-stake) support
-* Transaction messages support
-* Vardiff (variable difficulty / share limiter)
-* When started with a coin daemon that hasn't finished syncing to the network it shows the blockchain download progress and initializes once synced
+
+- Daemon RPC interface
+- Stratum TCP socket server
+- Block template / job manager
+- P2P to get block notifications as peer node
+- Optimized generation transaction building
+- Connecting to multiple daemons for redundancy
+- Process share submissions
+- Session managing for purging DDoS/flood initiated zombie workers
+- Auto ban IPs that are flooding with invalid shares
+- **POW** (proof-of-work) & **POS** (proof-of-stake) support
+- Transaction messages support
+- Vardiff (variable difficulty / share limiter)
+- When started with a coin daemon that hasn't finished syncing to the network it shows the blockchain download progress and initializes once synced
 
 ### Enhanced SHA256 Features (New)
-* ✓ **AsicBoost Support** - Overt AsicBoost with version rolling
-* ✓ **Version Rolling (BIP320)** - Efficient nonce space distribution
-* ✓ **Multi-Version Support** - `mining.multi_version` extension for overt AsicBoost
-* ✓ **Solo Mining Mode** - Direct mining without pool shares
-* ✓ **Proper PROP Implementation** - Fair proportional reward distribution
-* ✓ **Advanced Security Module** - Comprehensive DDoS protection and rate limiting
+
+- ✓ **AsicBoost Support** - Overt AsicBoost with version rolling
+- ✓ **Version Rolling (BIP320)** - Efficient nonce space distribution
+- ✓ **Multi-Version Support** - `mining.multi_version` extension for overt AsicBoost
+- ✓ **Solo Mining Mode** - Direct mining without pool shares
+- ✓ **Proper PROP Implementation** - Fair proportional reward distribution
+- ✓ **Advanced Security Module** - Comprehensive DDoS protection and rate limiting
 
 ### Hashing Algorithms Supported
-* ✓ **SHA256** (Bitcoin, Bitcoin Cash, etc.)
-* ✓ **SHA256 with AsicBoost**
+
+- ✓ **SHA256** (Bitcoin, Bitcoin Cash, etc.)
+- ✓ **SHA256 with AsicBoost**
 
 ## Requirements
-* node v8.11+
-* coin daemon (preferably one with a relatively updated API)
+
+- node v8.11+
+- coin daemon (preferably one with a relatively updated API)
 
 ## Installation
 
 ### Install as a node module by cloning repository
 
 ```bash
-git clone -b sha256-nomp-node-stratum-pool https://github.com/janos-raul/stratum-pool.git node_modules/stratum-pool
+git clone https://github.com/janos-raul/node-stratum-pool.git node_modules/stratum-pool
 npm update
 ```
 
@@ -84,15 +94,26 @@ var myCoin = {
   "name": "bitcoin",
   "symbol": "BTC",
   "algorithm": "sha256",
-  "reward": "POW",										
-  "asicboost": true,                    
-  "versionMask": "0x3fffe000",           
-  "enforcePoolVersionMask": true,       
-  "versionRollingMinBits": 16,         										
-  "asicboostMinDifficulty": 1000,      
-  "asicboostMaxClients": 1000,         
+  "reward": "POW",
+  "asicboost": true,
+  "versionMask": "0x3fffe000",
+  "enforcePoolVersionMask": true,
+  "versionRollingMinBits": 16,
+  "asicboostMinDifficulty": 1000,
+  "asicboostMaxClients": 1000,
+  "multiVersion": {
+    "enabled": true,
+    "maxVersions": 4,
+    "generationMode": "sequential"
+  },
   "coinbase": "sha256-mining.go.ro",
-  "txMessages": false,
+  "coinbasePayouts": {
+    "enabled": false,
+    "coinbaseOnly": false,
+    "feeHandledInCoinbase": false
+  },
+  "txMessages": true,
+  "txMessageText": "",
   "segwit": true,
   "taproot": true,
   "coinbaseTxVersion": 2,
@@ -103,7 +124,7 @@ var myCoin = {
   "rpcTimeout": 5000,
   "blockTime": 300,
   "minConf": 101,
-  
+
 "addressValidation": {
 		"validateWorkerUsername": true,
 		"addressPrefix": "bc",
@@ -115,7 +136,7 @@ var myCoin = {
         "txURL": "https://bitcoinexplorer.org/tx/",
         "blockURL": "https://bitcoinexplorer.org/block/"
     },
-	
+
 "rpc": {
             "host": "127.0.0.1",
             "port": 8332,
@@ -138,7 +159,7 @@ var pool = Stratum.createPool({
     "coin": "bitcoin.json",              // Reference to coin config file
     "asicboost": true,                   // Enable ASICBoost for this pool
     "blockIdentifier": "",               // Optional block identifier
-  
+
 	  // ============================================================================
 	  // SECURITY MODULE - Advanced DDoS Protection & Rate Limiting
 	  // ============================================================================
@@ -264,12 +285,12 @@ pool.on('share', function(isValidShare, isValidBlock, data) {
         - soloMining: boolean indicating if this was a solo mining share
         - minerAddress: address for solo miners
     */
-    
+
             if (!isValidBlock)
                 emitShare();
             else{
                 SubmitBlock(blockHex, function(){
-    
+
     console.log('Share data:', JSON.stringify(data));
 });
 ```
@@ -280,36 +301,47 @@ pool.on('share', function(isValidShare, isValidBlock, data) {
 
 ```javascript
 var bitcoin = {
-  "name": "bitcoin",
-  "symbol": "BTC",
-  "algorithm": "sha256",
-  "reward": "POW",										
-  "asicboost": true,                    
-  "versionMask": "0x3fffe000",           
-  "enforcePoolVersionMask": true,       
-  "versionRollingMinBits": 16,         										
-  "asicboostMinDifficulty": 1000,      
-  "asicboostMaxClients": 1000,         
-  "coinbase": "sha256-mining.go.ro",
-  "txMessages": false,
-  "segwit": true,
-  "taproot": true,
-  "coinbaseTxVersion": 2,
-  "hasBlockReward": true,
-  "blockVersion": 536870912,
-  "default_witness_commitment": true,
-  "shareDifficultyTarget": "target",
-  "rpcTimeout": 5000,
-  "blockTime": 300,
-  "minConf": 101,
+  name: "bitcoin",
+  symbol: "BTC",
+  algorithm: "sha256",
+  reward: "POW",
+  asicboost: true,
+  versionMask: "0x3fffe000",
+  enforcePoolVersionMask: true,
+  versionRollingMinBits: 16,
+  asicboostMinDifficulty: 1000,
+  asicboostMaxClients: 1000,
+  multiVersion: {
+    enabled: true,
+    maxVersions: 4,
+    generationMode: "sequential",
+  },
+  coinbase: "sha256-mining.go.ro",
+  coinbasePayouts: {
+    enabled: false,
+    coinbaseOnly: false,
+    feeHandledInCoinbase: false,
+  },
+  txMessages: true,
+  txMessageText: "",
+  segwit: true,
+  taproot: true,
+  coinbaseTxVersion: 2,
+  hasBlockReward: true,
+  blockVersion: 536870912,
+  default_witness_commitment: true,
+  shareDifficultyTarget: "target",
+  rpcTimeout: 5000,
+  blockTime: 300,
+  minConf: 101,
 };
 
 // Create pool with AsicBoost enabled
 var pool = Stratum.createPool({
-    "coin": bitcoin,
-    "address": "bc1qpool...",
-	"asicboost": true,
-    // ... other configuration
+  coin: bitcoin,
+  address: "bc1qpool...",
+  asicboost: true,
+  // ... other configuration
 });
 ```
 
@@ -347,6 +379,7 @@ This implementation supports the following stratum extensions:
 The `mining.multi_version` extension allows miners to request multiple block versions simultaneously, enabling overt AsicBoost mining. This is an alternative to `mining.configure` version rolling.
 
 #### How it works:
+
 1. Miner sends: `{"method": "mining.multi_version", "params": [4]}`
 2. Pool responds with `result: true` if enabled
 3. Pool sends jobs with multiple versions in `mining.notify`
@@ -371,15 +404,16 @@ The `mining.multi_version` extension allows miners to request multiple block ver
 
 #### Configuration Options:
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `enabled` | boolean | false | Enable/disable multi_version support |
-| `maxVersions` | number | 4 | Maximum number of versions a miner can request |
-| `mode` | string | "sequential" | How versions are generated ("sequential") |
+| Option        | Type    | Default      | Description                                    |
+| ------------- | ------- | ------------ | ---------------------------------------------- |
+| `enabled`     | boolean | false        | Enable/disable multi_version support           |
+| `maxVersions` | number  | 4            | Maximum number of versions a miner can request |
+| `mode`        | string  | "sequential" | How versions are generated ("sequential")      |
 
 #### Miner Compatibility:
 
 Miners supporting `mining.multi_version`:
+
 - Custom firmware with multi_version support
 - Some Bitmain firmware variants
 - Mining proxies with multi_version capability
@@ -387,6 +421,7 @@ Miners supporting `mining.multi_version`:
 ## Testing
 
 Test your AsicBoost implementation:
+
 ```bash
 # Test with bfgminer
 bfgminer -o stratum+tcp://localhost:3333 -u walletaddress -p x --version-rolling
@@ -409,6 +444,7 @@ cgminer -o stratum+tcp://localhost:3333 -u walletaddress -p x
 The stratum pool includes a comprehensive security system designed to protect against various attacks:
 
 #### Features:
+
 - **Rate Limiting**: Tracks connections, malformed messages, and socket floods per IP
 - **Progressive Ban System**: Escalating ban durations based on strike count
 - **Automatic Cleanup**: Expired bans and old tracking data are automatically purged
@@ -416,6 +452,7 @@ The stratum pool includes a comprehensive security system designed to protect ag
 - **Memory Efficient**: Designed to handle high-traffic scenarios without memory leaks
 
 #### Protection Against:
+
 - **Connection Flooding**: Limits rapid connection attempts from single IPs
 - **Malformed Messages**: Detects and bans clients sending invalid stratum messages
 - **Socket Flooding**: Protects against buffer overflow attacks
@@ -434,18 +471,21 @@ The stratum pool includes a comprehensive security system designed to protect ag
 
 **WSL2 Users**:
 If running your pool in WSL2, be aware that all connections appear to come from the same internal NAT IP (typically `172.x.x.x`). This means:
+
 - Banning an attacker would ban ALL miners
 - You should set `"enabled": false` for development
 - For production, deploy on native Linux or use HAProxy with PROXY protocol
 
 **TCP Proxy Protocol**:
 If using HAProxy or nginx with PROXY protocol:
+
 1. Set `"tcpProxyProtocol": true` in your pool config
 2. Configure your load balancer to send PROXY headers
 3. The pool will extract real client IPs from PROXY headers
 
 **Production Deployment**:
 For maximum security in production:
+
 - Enable the security module with conservative thresholds
 - Monitor security statistics regularly
 - Use external DDoS protection (Cloudflare, AWS Shield, etc.)
@@ -455,6 +495,7 @@ For maximum security in production:
 #### Implementation Details:
 
 The security module is implemented in `lib/security.js` and integrates with:
+
 - **Connection Handler**: Checks for bans on new connections
 - **Stratum Protocol**: Validates all incoming messages
 - **Socket Layer**: Monitors buffer sizes and data rates
@@ -469,11 +510,12 @@ All security tracking is in-memory for performance, with automatic cleanup every
 ## Maintained By
 
 ### **janos-raul**
+
 #### Developer & Maintainer
 
-[![Website](https://img.shields.io/badge/Pool-sha256--mining.go.ro-blue?style=for-the-badge)](https://sha256-mining.go.ro:50300)
+[![Website](https://img.shields.io/badge/Pool-sha256--mining.go.ro-blue?style=for-the-badge)](https://sha256-mining.go.ro:55000)
 
-*Building high-performance SHA256 mining infrastructure*
+_Building high-performance SHA256 mining infrastructure_
 
 </div>
 
@@ -481,19 +523,19 @@ All security tracking is in-memory for performance, with automatic cleanup every
 
 ## Credits
 
-* Original stratum-pool developers
-* [vekexasia](//github.com/vekexasia) - co-developer & great tester
-* [LucasJones](//github.com/LucasJones) - got p2p block notify working
-* [TheSeven](//github.com/TheSeven) - technical guidance
-* SHA256-NOMP Contributors - AsicBoost, solo mining, and PROP implementation
+- Original stratum-pool developers
+- [vekexasia](//github.com/vekexasia) - co-developer & great tester
+- [LucasJones](//github.com/LucasJones) - got p2p block notify working
+- [TheSeven](//github.com/TheSeven) - technical guidance
+- SHA256-NOMP Contributors - AsicBoost, solo mining, and PROP implementation
 
 ## Donations
 
 To support continued development:
 
-* BTC:  `bc1q0aa3k39ww33z24p3wpk72jjn32h2n5rfr85pnx`
-* BTCS: `bs1q8dnz4q52czdusl8hy04fw3jryj2kc3earck3y2`
-* BCH:  `qzhpajyfz7yvl8963rre5zqdp72pqy47ysttst0wmr`
+- BTC: `bc1q0aa3k39ww33z24p3wpk72jjn32h2n5rfr85pnx`
+- BTCS: `bs1q8dnz4q52czdusl8hy04fw3jryj2kc3earck3y2`
+- BCH: `qzhpajyfz7yvl8963rre5zqdp72pqy47ysttst0wmr`
 
 ## License
 
