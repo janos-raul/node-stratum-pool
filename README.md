@@ -106,28 +106,25 @@ var myCoin = {
     "maxVersions": 4,
     "generationMode": "sequential"
   },
-  "coinbase": "sha256-mining.go.ro",
   "coinbasePayouts": {
     "enabled": false,
     "coinbaseOnly": false,
     "feeHandledInCoinbase": false
   },
-  "txMessages": true,
-  "txMessageText": "",
+  "txMessages": true,                   // Enables the pool signature OP_RETURN output
+  "txMessageText": "",                  // Custom OP_RETURN text (max 255 bytes, truncated if longer);
+                                         // falls back to a built-in default if left empty
   "segwit": true,
-  "taproot": true,
-  "coinbaseTxVersion": 2,
-  "hasBlockReward": true,
-  "blockVersion": 536870912,
-  "default_witness_commitment": true,
-  "shareDifficultyTarget": "target",
-  "rpcTimeout": 5000,
-  "blockTime": 300,
-  "minConf": 101,
+  "default_witness_commitment": true,   // Informational only — witness commitment is included
+                                         // automatically whenever the daemon's GBT response provides
+                                         // one; this flag is not read anywhere and does not gate it
+  "blockTime": 300,                     // Used for luck (luckDays/luckHours/luckMinute) calculations
+  "minConf": 101,                       // Informational/reference only — the value that actually
+                                         // gates payouts is the pool config's paymentProcessing.minConf
 
 "addressValidation": {
 		"validateWorkerUsername": true,
-		"addressPrefix": "bc",
+		"addressPrefix": "bc1",
 		"minLength": 30,
 		"maxLength": 42
   },
@@ -155,10 +152,15 @@ var pool = Stratum.createPool({
 
 {
     // Basic settings
-    "enabled": true,                      // Enable this pool
+    "enabled": true,                     // Enable this pool
     "coin": "bitcoin.json",              // Reference to coin config file
     "asicboost": true,                   // Enable ASICBoost for this pool
-    "blockIdentifier": "",               // Optional block identifier
+    "blockIdentifier": "",               // Text embedded in the coinbase scriptSig, wrapped in slashes
+                                          // (e.g. "mypool.com" -> "/mypool.com/"). Threaded per-coin all
+                                          // the way through transaction building, so different coins in
+                                          // the same process can safely use different values. Truncated
+                                          // at 64 bytes to stay within the scriptSig's 100-byte consensus
+                                          // limit. Falls back to a built-in default if left empty.
 
 	  // ============================================================================
 	  // SECURITY MODULE - Advanced DDoS Protection & Rate Limiting
@@ -239,9 +241,9 @@ var pool = Stratum.createPool({
             "varDiff": {                 // Variable difficulty settings
                 "minDiff": 10000,        // Minimum difficulty
                 "maxDiff": 500000,       // Maximum difficulty
-                "targetTime": 15,        // Target time between shares (seconds)
-                "retargetTime": 90,      // How often to adjust difficulty (seconds)
-                "variancePercent": 30    // Allowed variance percentage
+                "targetTime": 30,        // Target time between shares (seconds)
+                "retargetTime": 200,     // How often to adjust difficulty (seconds)
+                "variancePercent": 5     // Allowed variance percentage
             }
         },
         "50213": {                       // Higher difficulty port for larger miners
@@ -251,9 +253,9 @@ var pool = Stratum.createPool({
             "varDiff": {
                 "minDiff": 50000,
                 "maxDiff": 5000000,
-                "targetTime": 25,
-                "retargetTime": 180,
-                "variancePercent": 35
+                "targetTime": 35,
+                "retargetTime": 240,
+                "variancePercent": 5
             }
         }
     },
@@ -276,14 +278,18 @@ var pool = Stratum.createPool({
 ### Event Handling with New Features
 
 ```javascript
-// Enhanced share event with AsicBoost data
+// Share event
 pool.on('share', function(isValidShare, isValidBlock, data) {
     /*
-    Enhanced data object now includes:
-        - versionRollingBits: bits used for version rolling
-        - asicboostUsed: boolean indicating if AsicBoost was used
-        - soloMining: boolean indicating if this was a solo mining share
-        - minerAddress: address for solo miners
+    data object includes:
+        - job: the job ID this share was submitted against
+        - ip: submitting miner's IP address
+        - worker: full worker name (address.workername)
+        - difficulty: the miner's currently assigned difficulty
+        - isSoloMining: boolean, true if this worker is solo mining
+        - isAsicBoost: boolean, true if the share used AsicBoost version rolling
+        - version: the block version used for this share
+        - error: present only when isValidShare is false
     */
 
             if (!isValidBlock)
@@ -316,24 +322,19 @@ var bitcoin = {
     maxVersions: 4,
     generationMode: "sequential",
   },
-  coinbase: "sha256-mining.go.ro",
   coinbasePayouts: {
     enabled: false,
     coinbaseOnly: false,
     feeHandledInCoinbase: false,
   },
-  txMessages: true,
-  txMessageText: "",
+  txMessages: true, // Enables the pool signature OP_RETURN output
+  txMessageText: "", // Custom OP_RETURN text (max 255 bytes); falls back to a
+  // built-in default if left empty
   segwit: true,
-  taproot: true,
-  coinbaseTxVersion: 2,
-  hasBlockReward: true,
-  blockVersion: 536870912,
-  default_witness_commitment: true,
-  shareDifficultyTarget: "target",
-  rpcTimeout: 5000,
-  blockTime: 300,
-  minConf: 101,
+  default_witness_commitment: true, // Informational only — included automatically whenever the
+  // daemon's GBT response provides one, not gated by this flag
+  blockTime: 300, // Used for luck calculations
+  minConf: 101, // Informational only — real gate is paymentProcessing.minConf
 };
 
 // Create pool with AsicBoost enabled
@@ -357,8 +358,8 @@ var pool = Stratum.createPool({
             "minDiff": 8192,
             "maxDiff": 1048576,
             "targetTime": 30,
-            "retargetTime": 120,
-            "variancePercent": 40
+            "retargetTime": 200,
+            "variancePercent": 5
         }
     }
 }
@@ -371,7 +372,7 @@ This implementation supports the following stratum extensions:
 - `mining.subscribe` with version rolling support
 - `mining.configure` for AsicBoost negotiation
 - `mining.multi_version` for overt AsicBoost with multiple versions
-- `mining.suggest_target` for solo miners
+- `mining.suggest_difficulty` — miner-requested starting difficulty, honored alongside the pool's own per-port default
 - `mining.submit` with version bits
 
 ### mining.multi_version Support
