@@ -26,6 +26,14 @@ High performance Stratum poolserver with enhanced SHA256 support in Node.js. One
 - Improved round management
 - Fair distribution based on actual work contributed
 
+### Merged Mining (AuxPoW) for Solo Miners (v1.5.0)
+
+- Namecoin-style merged mining: solo miners mine one or more aux coins on the same work as the parent coin
+- Aux coins defined once, grouped, and enabled per port (`auxGroup`); pool-mode miners keep plain parent jobs
+- Several Namecoin-standard coins share one merged-mining tree; coins with a different byte order or slot rule (e.g. ESF) run in a group of their own
+- Miner payout addresses per aux coin in the password (e.g. `m=solo,s256=<address>`), checked with the coin's daemon at login
+- Works with AsicBoost version rolling: the auxpow carries the parent header with the rolled version
+
 ---
 
 ## Notice
@@ -64,6 +72,7 @@ This server was built to be more efficient and easier to setup, maintain and sca
 - ✓ **Solo Mining Mode** - Direct mining without pool shares
 - ✓ **Proper PROP Implementation** - Fair proportional reward distribution
 - ✓ **Advanced Security Module** - Comprehensive DDoS protection and rate limiting
+- ✓ **Merged Mining (AuxPoW)** - Solo miners merge-mine Namecoin-standard and ESF-style aux coins
 
 ### Hashing Algorithms Supported
 
@@ -72,8 +81,9 @@ This server was built to be more efficient and easier to setup, maintain and sca
 
 ## Requirements
 
-- node v8.11+
+- node v24+ (see `.nvmrc`)
 - coin daemon (preferably one with a relatively updated API)
+- for merged mining: each aux coin's daemon with `createauxblock`/`getauxblock` and `submitauxblock`
 
 ## Installation
 
@@ -301,6 +311,70 @@ pool.on('share', function(isValidShare, isValidBlock, data) {
 });
 ```
 
+### Merged Mining
+
+Merged mining is off unless `mergedMining.enabled` is `true`. Aux coins are defined once in `auxCoins`, `groups` list the coins mined together, and a port opts in with `auxGroup`. Only **solo** miners on such a port get the group's job (a coinbase carrying the merged-mining tag); pool-mode miners and ports without `auxGroup` get the plain parent job.
+
+```javascript
+var pool = Stratum.createPool({
+    // ...coin, address, daemons as usual
+    ports: {
+        3333: { diff: 65536, auxGroup: "standard" },
+        3334: { diff: 65536, auxGroup: "esf" },
+        3335: { diff: 65536 }                 // plain parent mining only
+    },
+    mergedMining: {
+        enabled: true,
+        auxPollInterval: 5000,               // ms between createauxblock polls
+        auxCoins: {
+            sha256coin: {
+                symbol: "S256",
+                chainId: 598,
+                byteOrder: "namecoin",       // default
+                slotRule: "namecoin",        // default
+                addressParam: "s256",        // miners pass s256=<address> in the password
+                address: "<pool S256 address>",   // createauxblock payout
+                daemon: { host: "127.0.0.1", port: 25332, user: "rpcuser", password: "rpcpass" }
+            },
+            esf: {
+                symbol: "ESF",
+                chainId: 1175,
+                byteOrder: "reversed",       // tree root written byte-reversed
+                slotRule: "modulo",          // slot = nonce % size
+                addressParam: "esf",
+                address: "<pool ESF address>",
+                daemon: { host: "127.0.0.1", port: 25359, user: "rpcuser", password: "rpcpass" }
+            }
+        },
+        groups: {
+            standard: ["sha256coin"],        // Namecoin-standard coins may share a group
+            esf: ["esf"]                     // non-standard coins must be alone
+        }
+    }
+}, authorizeFn);
+```
+
+How it works:
+
+- Each aux coin used by a port gets its own daemon connection and is polled with `createauxblock <address>` (or `getauxblock <address>` for coins without `createauxblock`, such as ESF). A new aux hash rebuilds only the jobs of the groups containing that coin, sent with `clean_jobs=false`.
+- A group's coins sit in one merged-mining tree at their Namecoin slots. Two coins collide exactly when their chain IDs are equal modulo the tree size, so the pool picks the smallest tree (up to 4096 slots) where they differ and uses merkle nonce 0.
+- Every share on a group job is checked against each aux coin's target before the pool's own difficulty check, and a hit is submitted with `submitauxblock` in Namecoin's auxpow format (with `hashBlock`, coinbase index 0, the coin's chain branch, and the parent header including the rolled AsicBoost version).
+- A miner's aux addresses (`s256=`, `esf=`, … from each coin's `addressParam`) are checked with that coin's `validateaddress` at login; an invalid address refuses the login, an unreachable daemon accepts it with a warning.
+
+The pool refuses to start if the config is inconsistent: an `auxGroup` not in `groups`, an unknown coin, duplicate chain IDs or `addressParam`s, a non-standard coin sharing a group, chain IDs that collide at every tree size, or a coinbase scriptSig that could exceed 100 bytes (`blockIdentifier` is capped at 30 bytes when a port merge-mines).
+
+```javascript
+pool.on('auxBlock', function(accepted, data) {
+    /*
+    data: coin, symbol, auxHash, auxHeight, auxCoinbaseValue, txHash (aux coinbase txid when accepted),
+          worker, isSoloMining, auxAddress (the miner's address for this coin, or null),
+          parentHash, parentHeight, shareDiff, error (when rejected)
+    */
+});
+```
+
+Paying the miner is up to the portal: [sha256-nomp](https://github.com/janos-raul/sha256-nomp) records accepted blocks with an `auxAddress` as solo blocks of the aux coin, so that coin's own payment processor pays the finder.
+
 ## Usage Examples
 
 ### Basic SHA256 Pool with AsicBoost
@@ -476,6 +550,9 @@ If running your pool in WSL2, be aware that all connections appear to come from 
 - Banning an attacker would ban ALL miners
 - You should set `"enabled": false` for development
 - For production, deploy on native Linux or use HAProxy with PROXY protocol
+
+**TLS and HTTP on a plain stratum port**:
+A connection whose first bytes are a TLS handshake (a miner or rental service trying `stratum+ssl`) or an HTTP request (a browser, a port checker) is closed without counting a malformed-message strike, so services that try TLS first are not banned. HTTP clients get a short `400` reply pointing to `stratum+tcp://`. The per-IP connection rate limit still applies.
 
 **TCP Proxy Protocol**:
 If using HAProxy or nginx with PROXY protocol:
