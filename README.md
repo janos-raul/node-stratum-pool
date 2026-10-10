@@ -83,7 +83,7 @@ This server was built to be more efficient and easier to setup, maintain and sca
 
 - node v24+ (see `.nvmrc`)
 - coin daemon (preferably one with a relatively updated API)
-- for merged mining: each aux coin's daemon with `createauxblock`/`getauxblock` and `submitauxblock`
+- for merged mining: each aux coin's daemon with `createauxblock`/`getauxblock` and `submitauxblock`, or, in `getblocktemplate` mode, `getblocktemplate` (reporting `auxpow`) and `submitblock`
 
 ## Installation
 
@@ -285,6 +285,8 @@ var pool = Stratum.createPool({
 }
 ```
 
+Any daemon entry may also set `"wallet": "<name>"`: RPCs then go to `/wallet/<name>`, which Bitcoin Core-based daemons require for wallet calls when more than one wallet is loaded (error -19).
+
 ### Event Handling with New Features
 
 ```javascript
@@ -344,10 +346,18 @@ var pool = Stratum.createPool({
                 addressParam: "esf",
                 address: "<pool ESF address>",
                 daemon: { host: "127.0.0.1", port: 25359, user: "rpcuser", password: "rpcpass" }
+            },
+            vargamesh: {
+                symbol: "VMESH",
+                chainId: 22093,              // 0x564D
+                mode: "getblocktemplate",    // no aux-block RPCs: the pool builds the block
+                addressParam: "vmesh",
+                address: "<pool VMESH address>",  // paid by the aux block's coinbase
+                daemon: { host: "127.0.0.1", port: 29667, user: "rpcuser", password: "rpcpass" }
             }
         },
         groups: {
-            standard: ["sha256coin"],        // Namecoin-standard coins may share a group
+            standard: ["sha256coin", "vargamesh"],  // Namecoin-standard coins may share a group
             esf: ["esf"]                     // non-standard coins must be alone
         }
     }
@@ -357,6 +367,7 @@ var pool = Stratum.createPool({
 How it works:
 
 - Each aux coin used by a port gets its own daemon connection and is polled with `createauxblock <address>` (or `getauxblock <address>` for coins without `createauxblock`, such as ESF). A new aux hash rebuilds only the jobs of the groups containing that coin, sent with `clean_jobs=false`.
+- `mode: "getblocktemplate"` is for aux nodes without aux-block RPCs (VargaMesh). The pool polls `getblocktemplate`, requires `auxpow: true` and the configured chain ID, and builds the aux block itself: a coinbase paying the whole `coinbasevalue` to `address` (the script comes from the node's `validateaddress`) plus the witness commitment, the template's transactions, its version (already carrying the AuxPoW flag) and `auxpow_childnonce` as the nonce. The block is rebuilt on a new tip, or every 30 s for new transactions. A hit is submitted with `submitblock` as header + auxpow + transactions.
 - A group's coins sit in one merged-mining tree at their Namecoin slots. Two coins collide exactly when their chain IDs are equal modulo the tree size, so the pool picks the smallest tree (up to 4096 slots) where they differ and uses merkle nonce 0.
 - Every share on a group job is checked against each aux coin's target before the pool's own difficulty check, and a hit is submitted with `submitauxblock` in Namecoin's auxpow format (with `hashBlock`, coinbase index 0, the coin's chain branch, and the parent header including the rolled AsicBoost version).
 - A miner's aux addresses (`s256=`, `esf=`, … from each coin's `addressParam`) are checked with that coin's `validateaddress` at login; an invalid address refuses the login, an unreachable daemon accepts it with a warning.
