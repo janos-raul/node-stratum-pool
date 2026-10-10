@@ -601,7 +601,7 @@ All security tracking is in-memory for performance, with automatic cleanup every
 
 #### Developer & Maintainer
 
-[![Website](https://img.shields.io/badge/Pool-sha256--mining.go.ro-blue?style=for-the-badge)](https://sha256-mining.go.ro:55000)
+[![Website](https://img.shields.io/badge/Pool-sha256--mining.go.ro-blue?style=for-the-badge)](https://sha256-mining.go.ro:50300)
 
 _Building high-performance SHA256 mining infrastructure_
 
