@@ -26,6 +26,11 @@ High performance Stratum poolserver with enhanced SHA256 support in Node.js. One
 - Improved round management
 - Fair distribution based on actual work contributed
 
+### Startup Recovery (v1.5.2)
+
+- The pool no longer gives up when a daemon is not ready at startup (RPC not up yet, "Loading block index", or no peers yet: `getblocktemplate` "not connected"). The daemon check, the init RPCs and the first job are retried (10s, 20s, ... then once a minute) and the stratum ports open as soon as a block template is available. After a power cut, coins whose daemons need a while to find peers used to stay offline until a manual restart
+- An invalid pool address still stops the coin (configuration error)
+
 ### Hardening for Public Pools (v1.5.1)
 
 - At most 10 `mining.authorize` requests per connection, then the connection is closed (each one costs a daemon `validateaddress` call)

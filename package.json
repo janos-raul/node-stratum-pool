@@ -1,6 +1,6 @@
 {
   "name": "stratum-pool",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "High performance stratum pool server with solo mining and ASICBoost support",
   "keywords": [
     "stratum",
