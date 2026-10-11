@@ -26,6 +26,12 @@ High performance Stratum poolserver with enhanced SHA256 support in Node.js. One
 - Improved round management
 - Fair distribution based on actual work contributed
 
+### Hardening for Public Pools (v1.5.1)
+
+- At most 10 `mining.authorize` requests per connection, then the connection is closed (each one costs a daemon `validateaddress` call)
+- A non-string authorize password is treated as empty instead of throwing
+- A blocknotify that arrives while the pool is still starting is skipped instead of throwing
+
 ### Merged Mining (AuxPoW) for Solo Miners (v1.5.0)
 
 - Namecoin-style merged mining: solo miners mine one or more aux coins on the same work as the parent coin
