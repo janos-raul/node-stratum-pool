@@ -26,6 +26,10 @@ High performance Stratum poolserver with enhanced SHA256 support in Node.js. One
 - Improved round management
 - Fair distribution based on actual work contributed
 
+### Fresh Block Times with Merged Mining (v1.5.3)
+
+- Aux chain updates (merged mining) no longer restart the job rebroadcast timer. A merge-mined aux chain that changes more often than `jobRebroadcastTimeout` used to postpone the parent's template refresh until the next parent block, so parent blocks carried the previous block's time (`curtime`). The template is now refreshed every `jobRebroadcastTimeout` seconds as intended
+
 ### Startup Recovery (v1.5.2)
 
 - The pool no longer gives up when a daemon is not ready at startup (RPC not up yet, "Loading block index", or no peers yet: `getblocktemplate` "not connected"). The daemon check, the init RPCs and the first job are retried (10s, 20s, ... then once a minute) and the stratum ports open as soon as a block template is available. After a power cut, coins whose daemons need a while to find peers used to stay offline until a manual restart
