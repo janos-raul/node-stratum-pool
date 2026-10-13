@@ -26,6 +26,11 @@ High performance Stratum poolserver with enhanced SHA256 support in Node.js. One
 - Improved round management
 - Fair distribution based on actual work contributed
 
+### Leaner Logs (v1.5.4)
+
+- Each pool message is written once. When the portal listens for `log` events it logs them itself (with coin and thread), so the internal logger is only a fallback; the component is kept as a `[Component] ` prefix in the text
+- Routine lines that every cluster thread repeats (job rebroadcasts, new aux blocks, block notifications) are logged by the first thread only
+
 ### Fresh Block Times with Merged Mining (v1.5.3)
 
 - Aux chain updates (merged mining) no longer restart the job rebroadcast timer. A merge-mined aux chain that changes more often than `jobRebroadcastTimeout` used to postpone the parent's template refresh until the next parent block, so parent blocks carried the previous block's time (`curtime`). The template is now refreshed every `jobRebroadcastTimeout` seconds as intended
