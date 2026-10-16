@@ -31,6 +31,10 @@ High performance Stratum poolserver with enhanced SHA256 support in Node.js. One
 - Each pool message is written once. When the portal listens for `log` events it logs them itself (with coin and thread), so the internal logger is only a fallback; the component is kept as a `[Component] ` prefix in the text
 - Routine lines that every cluster thread repeats (job rebroadcasts, new aux blocks, block notifications) are logged by the first thread only
 
+### Instant Aux Tip Updates (blocknotify for aux coins)
+
+- `pool.processAuxBlockNotify(coin, blockHash)`: a blocknotify from an aux coin's node makes every parent pool that merge-mines the coin fetch the new aux work at once (`getblocktemplate` or `createauxblock`/`getauxblock`), and miners get it with `clean_jobs=true`. Before, parent pools saw a new aux tip only at their next aux poll (`auxPollInterval`, 5 s), so miners hashed up to 5 s on the old tip and any aux block found then was orphaned ("inconclusive"). `auxPollInterval` stays as the fallback. The call returns false for coins the pool does not merge-mine, and skips tips the pool already works on
+
 ### Fresh Block Times with Merged Mining (v1.5.3)
 
 - Aux chain updates (merged mining) no longer restart the job rebroadcast timer. A merge-mined aux chain that changes more often than `jobRebroadcastTimeout` used to postpone the parent's template refresh until the next parent block, so parent blocks carried the previous block's time (`curtime`). The template is now refreshed every `jobRebroadcastTimeout` seconds as intended
@@ -345,7 +349,7 @@ var pool = Stratum.createPool({
     },
     mergedMining: {
         enabled: true,
-        auxPollInterval: 5000,               // ms between aux work polls (createauxblock / getauxblock / getblocktemplate)
+        auxPollInterval: 5000,               // ms between aux work polls (createauxblock / getauxblock / getblocktemplate); a blocknotify from the aux node (processAuxBlockNotify) polls at once
         auxCoins: {
             sha256coin: {
                 symbol: "S256",
