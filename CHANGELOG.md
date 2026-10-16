@@ -2,7 +2,7 @@
 
 All notable changes to this stratum-pool fork, newest first. [sha256-nomp](https://github.com/janos-raul/sha256-nomp) pins a release by tag.
 
-## [Unreleased]
+## v1.5.5
 
 ### Added
 

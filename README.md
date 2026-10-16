@@ -34,7 +34,7 @@ High performance Stratum poolserver with enhanced SHA256 support in Node.js. One
 
 ### What's New
 
-Latest release: **v1.5.4**. Release notes are in the [Changelog](CHANGELOG.md).
+Latest release: **v1.5.5**. Release notes are in the [Changelog](CHANGELOG.md).
 
 ---
 
