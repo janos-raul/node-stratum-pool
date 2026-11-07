@@ -2,6 +2,12 @@
 
 All notable changes to this stratum-pool fork, newest first. [sha256-nomp](https://github.com/janos-raul/sha256-nomp) pins a release by tag.
 
+## [Unreleased]
+
+### Fixed
+
+- **Solo shares lost the miner's aux payout addresses.** The share event for a solo share that is not a block left out `clientContext`, so the portal could not see the `vmesh=`/`esf=` addresses and flagged every merge-mining solo worker as "no address" (the aux block payout itself was right, because block shares carried the context)
+
 ## v1.5.5
 
 ### Added
