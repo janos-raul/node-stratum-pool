@@ -2,6 +2,12 @@
 
 All notable changes to this stratum-pool fork, newest first. [sha256-nomp](https://github.com/janos-raul/sha256-nomp) pins a release by tag.
 
+## v1.5.7
+
+### Fixed
+
+- **CashAddr prefix in the miner username.** Miners often log in as `bitcoincashii:q….worker` (or `bitcoincash:q…`). The `:` made the portal reject the username. The stratum layer now drops a leading `<letters>:` from the worker name at `mining.authorize` and `mining.submit`, so the short `q…` form is used for auth, shares and payouts (`util.stripAddressPrefix`)
+
 ## v1.5.6
 
 ### Fixed
